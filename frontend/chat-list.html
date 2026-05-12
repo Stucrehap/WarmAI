@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园交友系统 - 消息列表</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>消息</h1>
+        <div class="nav-buttons">
+            <button class="btn-secondary" onclick="location.href='/home.html'">发现</button>
+            <button class="btn-secondary" onclick="location.href='/profile.html'">个人资料</button>
+            <button class="btn-secondary" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="profile-container">
+            <h2 style="margin-bottom: 20px;">匹配成功列表</h2>
+            <div id="matchList"></div>
+            <div id="noMatches" style="display: none; text-align: center; color: #666; margin-top: 30px;">
+                <p>暂无匹配成功的用户</p>
+                <p>去<a href="/home.html" style="color: #667eea;">发现</a>更多朋友吧！</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 页面加载时检查登录状态并加载匹配列表
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!window.api.isLoggedIn()) {
+                window.location.href = '/';
+                return;
+            }
+
+            await loadMatches();
+        });
+
+        // 加载匹配成功列表
+        async function loadMatches() {
+            try {
+                const matches = await window.api.getMatches();
+                const matchListDiv = document.getElementById('matchList');
+                const noMatchesDiv = document.getElementById('noMatches');
+
+                if (matches.length === 0) {
+                    matchListDiv.style.display = 'none';
+                    noMatchesDiv.style.display = 'block';
+                    return;
+                }
+
+                matchListDiv.style.display = 'block';
+                noMatchesDiv.style.display = 'none';
+
+                matchListDiv.innerHTML = '';
+                matches.forEach(match => {
+                    const user = match.matched_user;
+                    const matchDiv = document.createElement('div');
+                    matchDiv.style.cssText = 'background: #f9f9f9; padding: 20px; margin-bottom: 15px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 15px; transition: transform 0.2s;';
+                    matchDiv.onmouseover = () => matchDiv.style.transform = 'translateX(5px)';
+                    matchDiv.onmouseout = () => matchDiv.style.transform = 'translateX(0)';
+                    matchDiv.onclick = () => location.href = `/chat.html?user_id=${user.id}`;
+
+                    matchDiv.innerHTML = `
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 1.5em; color: white;">
+                            ${user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div style="flex: 1;">
+                            <h3 style="color: #333; margin-bottom: 5px;">${user.username}</h3>
+                            <p style="color: #666; font-size: 0.9em;">${user.university || ''} ${user.major || ''}</p>
+                            <p style="color: #999; font-size: 0.8em; margin-top: 5px;">匹配分数：${(match.match_score * 100).toFixed(0)}分</p>
+                        </div>
+                    `;
+
+                    matchListDiv.appendChild(matchDiv);
+                });
+            } catch (error) {
+                alert('加载匹配列表失败：' + error.message);
+            }
+        });
+
+        // 退出登录
+        function logout() {
+            window.api.clearToken();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园交友系统 - 个人资料</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>个人资料</h1>
+        <div class="nav-buttons">
+            <button class="btn-secondary" onclick="location.href='/home.html'">发现</button>
+            <button class="btn-secondary" onclick="location.href='/chat-list.html'">消息</button>
+            <button class="btn-secondary" onclick="logout()">退出登录</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="profile-container">
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">邮箱</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="student_id">学号</label>
+                    <input type="text" id="student_id" name="student_id">
+                </div>
+
+                <div class="form-group">
+                    <label for="university">学校</label>
+                    <input type="text" id="university" name="university" placeholder="例如：清华大学">
+                </div>
+
+                <div class="form-group">
+                    <label for="major">专业</label>
+                    <input type="text" id="major" name="major" placeholder="例如：计算机科学">
+                </div>
+
+                <div class="form-group">
+                    <label for="grade">年级</label>
+                    <input type="text" id="grade" name="grade" placeholder="例如：2023">
+                </div>
+
+                <div class="form-group">
+                    <label for="bio">个人简介</label>
+                    <textarea id="bio" name="bio" rows="4" style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="interests">兴趣标签（用逗号分隔）</label>
+                    <input type="text" id="interests" name="interests" placeholder="例如：运动,音乐,阅读">
+                </div>
+
+                <button type="submit" class="btn-primary">保存资料</button>
+            </form>
+
+            <div id="message" class="message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // 页面加载时获取用户信息
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!window.api.isLoggedIn()) {
+                window.location.href = '/';
+                return;
+            }
+
+            await loadUserProfile();
+        });
+
+        // 加载用户信息
+        async function loadUserProfile() {
+            try {
+                const user = await window.api.getCurrentUser();
+
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('student_id').value = user.student_id || '';
+                document.getElementById('university').value = user.university || '';
+                document.getElementById('major').value = user.major || '';
+                document.getElementById('grade').value = user.grade || '';
+                document.getElementById('bio').value = user.bio || '';
+                document.getElementById('interests').value = user.interests ? user.interests.join(',') : '';
+            } catch (error) {
+                alert('加载用户信息失败：' + error.message);
+            }
+        }
+
+        // 保存用户资料
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const interestsText = document.getElementById('interests').value;
+            const interests = interestsText ? interestsText.split(',').map(s => s.trim()) : [];
+
+            const userData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                student_id: document.getElementById('student_id').value || null,
+                university: document.getElementById('university').value || null,
+                major: document.getElementById('major').value || null,
+                grade: document.getElementById('grade').value || null,
+                bio: document.getElementById('bio').value || '',
+                interests: interests
+            };
+
+            try {
+                // 注意：这里需要PUT /api/users/profile接口
+                const response = await fetch('http://localhost:8000/api/users/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.api.getToken()}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('保存失败');
+                }
+
+                showMessage('保存成功！', 'success');
+            } catch (error) {
+                showMessage(error.message, 'error');
+            }
+        });
+
+        // 显示消息
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // 退出登录
+        function logout() {
+            window.api.clearToken();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

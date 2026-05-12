@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI校园交友系统 - 聊天</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <button style="background: none; border: none; color: white; font-size: 1.2em; cursor: pointer;" onclick="location.href='/chat-list.html'">←</button>
+            <h2 id="chatUserName">聊天</h2>
+            <div></div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div style="text-align: center; color: #999; margin-top: 20px;">加载中...</div>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+</html>
